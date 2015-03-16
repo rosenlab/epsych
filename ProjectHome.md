@@ -1,0 +1,3 @@
+This Matlab toolbox allows the development of simple or dynamic electrophysiology, behavior, and combined experiments using the Tucker-Davis Technologies (TDT) hardware and ActiveX controls.
+
+NOTE: This project combines, improves upon, and replaces the ephys and psychophysics projects.  The ephys project will still be available and some fixes and minor updates may be made in the future.  The psychophysics.googlecode.com website no redirects here and is no longer available.
