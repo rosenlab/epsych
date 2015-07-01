@@ -19,7 +19,7 @@ function bits = Mask2Bits(mask,nbits)
 % 
 % Daniel.Stolzberg@gmail.com 2014
 
-narginchk(1,2);
+% narginchk(1,2); % removed for backward campatability in matlab 
 assert(isscalar(mask),'mask input must be a scalar integer value.')
 if nargin == 1 || isempty(nbits)
     nbits = 32;
