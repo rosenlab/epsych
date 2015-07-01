@@ -129,8 +129,8 @@ cols = {'ResponseCode','TrialType','Tone_Dur','Tone_dBSPL','Noise_Dur','Noise_dB
 set(h.DataTable,'ColumnName',cols,'data',[]);
 set(h.NextTrialTable,'ColumnName',cols(2:end),'data',[],'RowName','>');
 
-cla(h.AxPerformance);
 
+cla(h.AxPerformance);
 
 function BoxTimerRunTime(hObj,~,f)
 % function BoxTimerRunTime(hObj,~,f,hObject,eventdata,handles)
@@ -238,6 +238,9 @@ global RandNoGos
 
 % NB: ax contains UserData for gui item NHitsFAs_axes
 PrevNTrials = get(ax,'UserData');
+if isempty(PrevNTrials)
+    PrevNTrials = 0;
+end
 NTrials = Data(end).TrialID; % how many trials (SAFES and WARNS both) have been presented)
 
 % If 1) This is not the first trial in the session and 
@@ -322,6 +325,9 @@ function NTrials(ax,Data)
 
 % NB: ax contains UserData for gui item NTrials_axes
 PrevNTrials = get(ax,'UserData');
+if isempty(PrevNTrials)
+    PrevNTrials = 0;
+end
 NTrials = Data(end).TrialID; % how many trials (SAFES and WARNS both) have been presented)
 
 % If 1) This is not the first trial in the session and 
