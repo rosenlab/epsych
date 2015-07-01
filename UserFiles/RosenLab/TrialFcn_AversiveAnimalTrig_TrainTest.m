@@ -114,7 +114,7 @@ end
 
 
 
-
+% disp('I''m in the TrialFcn')
 
 
 
@@ -125,11 +125,11 @@ end
 switch traintype
     case 'spoutTrain'
         % Just present SAFES
-        %disp('I''m in the spoutTrain case')
+%         disp('I''m in the spoutTrain case')
         NextTrialID = find([TRIALS.trials{:,ttind}]==1); % trialtype of 1 means SAFE as defined in .prot file
         
     case 'varydurTrain'
-        %disp('I''m in the varydurTrain case')
+%         disp('I''m in the varydurTrain case')
         
         %Find the column indices that define tone duration
         %depth_ind = ismember(TRIALS.writeparams,'Stim.AMdepth');

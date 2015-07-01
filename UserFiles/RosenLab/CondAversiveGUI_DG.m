@@ -25,7 +25,7 @@ function varargout = CondAvoidGUI(varargin)
 
 % Edit the above text to modify the response to help CondAvoidGUI
 
-% Last Modified by GUIDE v2.5 08-Jun-2015 18:05:23
+% Last Modified by GUIDE v2.5 08-Jun-2015 15:33:23
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -161,9 +161,10 @@ for i = 1:T.TrialIndex-1
     ts(i) = etime(T.DATA(i).ComputerTimestamp,RUNTIME.StartTime);
 end
 
+
 PlotPerformance(h.AxPerformance,ts,[T.DATA.ResponseCode]);
-HitMiss(h.NHitsFAs_axes, [T.DATA], h.displayNSafes);
-NTrials(h.NTrials_axes, [T.DATA]);
+HitMiss(h.NHitsFAs_axes,[T.DATA]);
+NTrials(h.NTrials_axes,[T.DATA]);
 
 d = flipud(d);
 
@@ -210,7 +211,7 @@ MISS = RCode == 18;
 CR   = RCode == 40;
 FA   = RCode == 36;
 
-ind = ts < ts(end) - 120;
+ind = ts < ts(end) - 60;
 ts(ind) = [];
 HITS(ind) = [];
 MISS(ind) = [];
@@ -231,10 +232,9 @@ set(ax,'ylim',[0 2.5],'xlim',[ts(end)-120 ts(end)]);
 
 
 
-function HitMiss(ax,Data,displayNSafes)
-% displayNSafes is the handle to the static text
+function HitMiss(ax,Data)
 
-global RandNoGos
+% global traintype tonedur tonelev
 
 % NB: ax contains UserData for gui item NHitsFAs_axes
 PrevNTrials = get(ax,'UserData');
@@ -300,19 +300,6 @@ if NTrials > 0 && PrevNTrials~=NTrials && Data(end).TrialType == 0
 end  % IF NTrials and WARN
 
 set(ax,'UserData',NTrials);
-
-% Update display: upcoming #SAFES
-nextNSafes = RandNoGos;
-set(displayNSafes,'string',num2str(nextNSafes)); drawnow;
-
-% % Update display: dB SPL associated with tone duration during Training
-% 
-% set(dBforTrain,'string',num2str(nextNSafes)); drawnow;
-% 
-% % Update display: Duration associated with sound level during Testing
-% 
-% set(durForTest,'string',num2str(nextNSafes)); drawnow;
-
 
 
 
@@ -507,10 +494,8 @@ traintype = 'spoutTrain';
 
 
 
-% -----------------------------------------------------%
 % VARY TONE DURATION SECTION (training with increasingly shorter tones)
 % --- Executes on button press in VaryToneDur_radio.
-% -----------------------------------------------------%
 function VaryToneDur_radio_Callback(hObject, eventdata, handles)
 % hObject    handle to VaryToneDur_radio (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -554,7 +539,7 @@ tone_pop_options = (get(hObject1,'String'));
 tone_pop_select = tone_pop_options(get(hObject1,'Value'));
 tonedur = str2double(tone_pop_select);
 if get(handles.VaryToneDur_radio,'value');
-    traintype = 'varydurTrain';
+traintype = 'varydurTrain';
 end
 
 % --- Executes during object creation, after setting all properties.
@@ -571,11 +556,8 @@ end
 
 
 
-
-% -----------------------------------------------------%
 % VARY TONE LEVEL SECTION (testing for tone threshold)
 % --- Executes on button press in VaryToneLevel_radio.
-% -----------------------------------------------------%
 function VaryToneLevel_radio_Callback(hObject, eventdata, handles)
 % hObject    handle to VaryToneLevel_radio (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -588,30 +570,53 @@ set(handles.VaryToneDur_radio,'value',0);
 guidata(hObject, handles);
 
 %VaryToneLevel_edit_Callback(hObject, eventdata, handles)
-ToneLev_listbox_Callback(hObject, eventdata, handles)
+ToneLev_popup_Callback(hObject, eventdata, handles)
 
 
-% --- Executes on selection change in ToneLev_listbox.
-function ToneLev_listbox_Callback(hObject, eventdata, handles)
-% hObject    handle to ToneLev_listbox (see GCBO)
+% --- Executes on selection change in ToneLev_popup.
+function ToneLev_popup_Callback(hObject, eventdata, handles)
+% hObject    handle to ToneLev_popup (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-% Hints: contents = cellstr(get(hObject,'String')) returns ToneLev_listbox contents as cell array
-%        contents{get(hObject,'Value')} returns selected item from ToneLev_listbox
+% Hints: contents = cellstr(get(hObject,'String')) returns ToneLev_popup contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from ToneLev_popup
 global tonelev traintype
 
-hObject1 = handles.ToneLev_listbox;
-lev_box_options = (get(hObject1,'String'));
-lev_box_select = lev_box_options(get(hObject1,'Value'));
-tonelev = str2double(lev_box_select);
+hObject1 = handles.ToneLev_popup;
+lev_pop_options = (get(hObject1,'String'));
+lev_pop_select = lev_pop_options(get(hObject1,'Value'));
+tonelev = str2double(lev_pop_select);
 if get(handles.VaryToneLevel_radio,'value');
-    traintype = 'varylevTest';
+traintype = 'varylevTest';
 end
 
 % --- Executes during object creation, after setting all properties.
-function ToneLev_listbox_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to ToneLev_listbox (see GCBO)
+function ToneLev_popup_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to ToneLev_popup (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    empty - handles not created until after all CreateFcns called
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+% --- Executes on selection change in DL_list.
+function DL_list_Callback(hObject, eventdata, handles)
+% hObject    handle to DL_list (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+% Hints: contents = cellstr(get(hObject,'String')) returns DL_list contents as cell array
+%        contents{get(hObject,'Value')} returns selected item from DL_list
+
+
+% --- Executes during object creation, after setting all properties.
+function DL_list_CreateFcn(hObject, eventdata, handles)
+% hObject    handle to DL_list (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    empty - handles not created until after all CreateFcns called
 
@@ -620,4 +625,3 @@ function ToneLev_listbox_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-% -----------------------------------------------------%

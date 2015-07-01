@@ -48,14 +48,13 @@ function NextTrialID = TrialFcn_AversiveAnimalTrig_TrainTest(TRIALS)
 % 
 % Daniel.Stolzberg@gmail.com 2014
 
-global traintype tonedur tonelev RUNTIME AX RandNoGos
+global traintype tonedur tonelev
 
 %disp(traintype)
 %keyboard
 
 %Establish some persistent variables
-persistent CountNoGos GoTrialRow TrackGoTrials min_nogos max_nogos ttind
-% RandNoGos used to be persistent; making it global to pass into GUI function
+persistent RandNoGos CountNoGos GoTrialRow min_nogos max_nogos ttind
 
 %If it's the first trial...
 if TRIALS.TrialIndex == 1
@@ -89,8 +88,6 @@ if TRIALS.TrialIndex == 1
    
    %Initialize the type of WARN/GO trial to zero
    GoTrialRow = 0;
-   %Initialize the position of WARN/GO trials to zero
-   TrackGoTrials = 1;
    
    % NextTrialID refers to the row of the TRIALS.trials matrix set up in
    % the .prot file under ep_ExperimentDesign
@@ -103,24 +100,16 @@ if TRIALS.TrialIndex == 1
 end
 
 
-% if RUNTIME.UseOpenEx
-%     licked = AX.GetTargetVal('Behave.!Licking',1);
-% else
-%     keyboard
-%     licked = AX.GetTagVal('!Licking',1);
-%     disp('licked: ',num2str(licked))
-% end
+%keyboard
 
 
-
-
-
-
-
+%disp(traintype);
 
 if isempty(traintype)
     traintype = 'empty';
 end
+
+
 
 switch traintype
     case 'spoutTrain'
@@ -155,51 +144,33 @@ switch traintype
         end
         
     case 'varylevTest'
-%         disp('I''m in the varylevTest case')
+        %disp('I''m in the varylevTest case')
         
         %Find the column indices that define tone level
         %depth_ind = ismember(TRIALS.writeparams,'Stim.AMdepth');
         ToneLevColIdx = ~cellfun(@isempty,strfind(TRIALS.writeparams,'Tone_dBSPL'));
-        
-        % create a warnidx vector of levels in descending order
-        [tonelevdesc, tonelevdescidx] = sort(tonelev,'descend');
-        for d = 1:size(tonelevdesc,1)
-             % !!! Assumes that the WARN trial you want is in rows 8 thru 19.
-            warnidx(d) = find([TRIALS.trials{8:19,ToneLevColIdx}]'==tonelevdesc(d)) + 7; % +7 because we're looking in rows 8 thru 19
-        end
-        
-        % Step through chosen trials (in GUI ToneLev_listbox) in descending order (from easier/louder to harder/quieter)
-        % In that order, present each of those trial types as a WARN.
-        if CountNoGos == RandNoGos % Criterion for # of NoGos (safe) prior to Go (warn) trial
-            % select a WARN/GO trial
-            GoTrialRow = warnidx(TrackGoTrials);
-            NextTrialID = GoTrialRow;
-            
-            if TrackGoTrials >= size(warnidx,2), TrackGoTrials = 0; end
-            
-            TrackGoTrials = TrackGoTrials + 1;
-            CountNoGos = 0;
-            % Choose a random # of SAFES for the next interval
-            RandNoGos = randi([min_nogos,max_nogos],1);
-            
-%         % !!! Assumes that the WARN trial you want is in rows 8 thru 19.
-%         warnidx = find([TRIALS.trials{8:19,ToneLevColIdx}]'==tonelev) + 7; % !!! +7 because we're looking in rows 8 thru 19
-
+        % !!! This line assumes that the WARN trial you're lookin for is in rows 8 thru 19.
+        warnidx = find([TRIALS.trials{8:19,ToneLevColIdx}]'==tonelev) + 7; % !!! +7 because we're looking in rows 8 thru 19
+         
         % Choose trial where the tone level matches that in the GUI
         % VaryToneDuration textbox. Present ONLY that trial type as a WARN.
-%             % select a WARN/GO trial
-%             GoTrialRow = warnidx;
-%             
-%             % choose the number of SAFES to be presented prior to the next WARN
-%             RandNoGos = randi([min_nogos,max_nogos],1);
-%             CountNoGos = 0;
-%             
-%             NextTrialID = GoTrialRow;
+        if CountNoGos == RandNoGos % Criterion for # of NoGos (safe) prior to Go (warn) trial
+            % select a WARN/GO trial
+            GoTrialRow = warnidx;
+            
+            % choose the number of SAFES to be presented prior to the next WARN
+            RandNoGos = randi([min_nogos,max_nogos],1);
+            CountNoGos = 0;
+            
+            NextTrialID = GoTrialRow;
         else
             % select a SAFE/NOGO trial - choose row from matrix TRIALS.trials
             NextTrialID = find([TRIALS.trials{:,ttind}]==1); % trialtype of 1 means SAFE as defined in .prot file
             CountNoGos = CountNoGos + 1;
         end
+        
+    case 'calibration' % present the tone and noise calibration sounds
+         NextTrialID = find([TRIALS.trials{:,ttind}]==0);
         
     otherwise
         %Step through WARN trials in order of their entry
