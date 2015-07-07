@@ -57,6 +57,9 @@ global traintype tonedur tonelev RUNTIME AX RandNoGos
 persistent CountNoGos GoTrialRow TrackGoTrials min_nogos max_nogos ttind
 % RandNoGos used to be persistent; making it global to pass into GUI function
 
+
+try
+
 %If it's the first trial...
 if TRIALS.TrialIndex == 1
    
@@ -65,7 +68,11 @@ if TRIALS.TrialIndex == 1
     
    %Find the column indices that define trial type (SAFE (NOGO) or WARN (GO))
    %depth_ind = ismember(TRIALS.writeparams,'Stim.AMdepth');
-   ttind = ~cellfun(@isempty,strfind(TRIALS.writeparams,'TrialType'));
+   if RUNTIME.UseOpenEx
+       ttind = ~cellfun(@isempty,strfind(TRIALS.writeparams,'Stim.TrialType'));
+   else
+       ttind = ~cellfun(@isempty,strfind(TRIALS.writeparams,'TrialType'));
+   end
    ttind = find(ttind,1);
    
    %Sort TRIALS.trials structure in order of descending depth
@@ -125,15 +132,19 @@ end
 switch traintype
     case 'spoutTrain'
         % Just present SAFES
-%         disp('I''m in the spoutTrain case')
+        disp('I''m in the spoutTrain case')
         NextTrialID = find([TRIALS.trials{:,ttind}]==1); % trialtype of 1 means SAFE as defined in .prot file
         
     case 'varydurTrain'
-%         disp('I''m in the varydurTrain case')
+        disp('I''m in the varydurTrain case')
         
         %Find the column indices that define tone duration
         %depth_ind = ismember(TRIALS.writeparams,'Stim.AMdepth');
-        ToneDurColIdx = ~cellfun(@isempty,strfind(TRIALS.writeparams,'Tone_Dur'));
+        if RUNTIME.UseOpenEx
+            ToneDurColIdx = ~cellfun(@isempty,strfind(TRIALS.writeparams,'Stim.Tone_Dur'));
+        else
+            ToneDurColIdx = ~cellfun(@isempty,strfind(TRIALS.writeparams,'Tone_Dur'));
+        end
         % !!! This line assumes that the WARN trial you're lookin for is in the first 7 rows.
         warnidx = find([TRIALS.trials{1:7,ToneDurColIdx}]'==tonedur);
           
@@ -155,11 +166,15 @@ switch traintype
         end
         
     case 'varylevTest'
-%         disp('I''m in the varylevTest case')
+        disp('I''m in the varylevTest case')
         
         %Find the column indices that define tone level
         %depth_ind = ismember(TRIALS.writeparams,'Stim.AMdepth');
-        ToneLevColIdx = ~cellfun(@isempty,strfind(TRIALS.writeparams,'Tone_dBSPL'));
+        if RUNTIME.UseOpenEx
+            ToneLevColIdx = ~cellfun(@isempty,strfind(TRIALS.writeparams,'Stim.Tone_dBSPL'));
+        else
+            ToneLevColIdx = ~cellfun(@isempty,strfind(TRIALS.writeparams,'Tone_dBSPL'));
+        end
         
         % create a warnidx vector of levels in descending order
         [tonelevdesc, tonelevdescidx] = sort(tonelev,'descend');
@@ -232,7 +247,10 @@ end
 
 
 
-
+catch
+    
+   disp('DOH!!!') 
+end
 
 
 

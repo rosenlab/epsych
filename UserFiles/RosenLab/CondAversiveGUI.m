@@ -145,7 +145,7 @@ if T.TrialIndex == 1, return; end
 cols = get(h.DataTable,'ColumnName');
 
 if RUNTIME.UseOpenEx
-    cols = cellfun(@(a) (['Behave_' a]),cols,'UniformOutput',false);
+    cols = cellfun(@(a) (['Stim_' a]),cols,'UniformOutput',false);
     ind = ~cellfun(@isempty,strfind(cols,'ResponseCode'));
     cols{ind} = 'ResponseCode';
 end
@@ -174,7 +174,7 @@ set(h.DataTable,'Data',d,'RowName',rows);
 cols = get(h.NextTrialTable,'ColumnName');
 
 if RUNTIME.UseOpenEx
-    cols = cellfun(@(a) (['Behave.' a]),cols,'UniformOutput',false);
+    cols = cellfun(@(a) (['Stim.' a]),cols,'UniformOutput',false);
 end
 
 p = T.trials(T.NextTrialID,:);
@@ -234,7 +234,7 @@ set(ax,'ylim',[0 2.5],'xlim',[ts(end)-120 ts(end)]);
 function HitMiss(ax,Data,displayNSafes)
 % displayNSafes is the handle to the static text
 
-global RandNoGos
+global RandNoGos RUNTIME
 
 % NB: ax contains UserData for gui item NHitsFAs_axes
 PrevNTrials = get(ax,'UserData');
@@ -246,15 +246,24 @@ NTrials = Data(end).TrialID; % how many trials (SAFES and WARNS both) have been 
 % If 1) This is not the first trial in the session and 
 %    2) the most recent trial has not already been processed and
 %    3) the most recent trial was a WARN
-if NTrials > 0 && PrevNTrials~=NTrials && Data(end).TrialType == 0  
+str = 'TrialType';
+if RUNTIME.UseOpenEx
+    str = ['Stim_' str];
+end
+if NTrials > 0 && PrevNTrials~=NTrials && Data(end).(str) == 0  
     
     HITS = [Data.ResponseCode] == 17; % logical vector of HITS
     MISS = [Data.ResponseCode] == 18;
     CR   = [Data.ResponseCode] == 40;
     FA   = [Data.ResponseCode] == 36;
     
-    tonedurs = [Data.Tone_Dur];
-    tonelevs = [Data.Tone_dBSPL];
+    if RUNTIME.UseOpenEx
+        tonedurs = [Data.Stim_Tone_Dur];
+        tonelevs = [Data.Stim_Tone_dBSPL];
+    else
+        tonedurs = [Data.Tone_Dur];
+        tonelevs = [Data.Tone_dBSPL];
+    end
     DursLevs = [tonedurs', tonelevs'];
     
     [combos m n] = unique(DursLevs,'rows');
@@ -282,7 +291,7 @@ if NTrials > 0 && PrevNTrials~=NTrials && Data(end).TrialType == 0
         percHITS(C) = nHITS(C)/nWARNS(C);
     end
     
-    SAFES = [Data.TrialType] == 1; % vector where WARNS are ones and SAFES are zeros
+    SAFES = [Data.(str)] == 1; % vector where WARNS are ones and SAFES are zeros
     SAFEidx = find(SAFES==1);
     nSAFES = sum(SAFES);
     nFA = sum(FA(SAFEidx));
@@ -322,6 +331,7 @@ set(displayNSafes,'string',num2str(nextNSafes)); drawnow;
 
 
 function NTrials(ax,Data)
+global RUNTIME
 
 % NB: ax contains UserData for gui item NTrials_axes
 PrevNTrials = get(ax,'UserData');
@@ -333,10 +343,19 @@ NTrials = Data(end).TrialID; % how many trials (SAFES and WARNS both) have been 
 % If 1) This is not the first trial in the session and 
 %    2) the most recent trial has not already been processed and
 %    3) the most recent trial was a WARN
-if NTrials > 0 && PrevNTrials~=NTrials && Data(end).TrialType == 0  
+str = 'TrialType';
+if RUNTIME.UseOpenEx
+    str = ['Stim_' str];
+end
+if NTrials > 0 && PrevNTrials~=NTrials && Data(end).(str) == 0  
     
-    tonedurs = [Data.Tone_Dur];
-    tonelevs = [Data.Tone_dBSPL];
+    if RUNTIME.UseOpenEx
+        tonedurs = [Data.Stim_Tone_Dur];
+        tonelevs = [Data.Stim_Tone_dBSPL];
+    else
+        tonedurs = [Data.Tone_Dur];
+        tonelevs = [Data.Tone_dBSPL];
+    end
     DursLevs = [tonedurs', tonelevs'];
     
     [combos m n] = unique(DursLevs,'rows');
@@ -388,9 +407,9 @@ c = get(hObject,'backgroundcolor');
 set(hObject,'backgroundcolor','g'); drawnow
 
 if RUNTIME.UseOpenEx
-    AX.SetTargetVal('Behave.!AddDrop',1);
+    AX.SetTargetVal('Stim.!AddDrop',1);
     pause(0.001);
-    AX.SetTargetVal('Behave.!AddDrop',0);
+    AX.SetTargetVal('Stim.!AddDrop',0);
 else
     AX.SetTagVal('!AddDrop',1);
     pause(0.001);
@@ -398,7 +417,7 @@ else
 end
 
 % if RUNTIME.UseOpenEx
-%     licked = AX.GetTargetVal('Behave.!Licking',1);
+%     licked = AX.GetTargetVal('Stim.!Licking',1);
 % else
 %     licked = AX.GetTagVal('!Licking',1);
 %     disp('licked: ',num2str(licked))
@@ -433,13 +452,13 @@ c = get(handles.figure1,'color');
 if get(hObject,'Value') == 1
     set(hObject,'backgroundcolor','r'); drawnow
     if RUNTIME.UseOpenEx
-        AX.SetTargetVal('Behave.!Pause',1);
+        AX.SetTargetVal('Stim.!Pause',1);
     else
         AX.SetTagVal('!Pause',1);
     end
 else
     if RUNTIME.UseOpenEx
-        AX.SetTargetVal('Behave.!Pause',0);
+        AX.SetTargetVal('Stim.!Pause',0);
     else
         AX.SetTagVal('!Pause',0);
     end
