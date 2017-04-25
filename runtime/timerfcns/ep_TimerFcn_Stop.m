@@ -8,6 +8,8 @@ function RUNTIME = ep_TimerFcn_Stop(RUNTIME,AX)
 % 
 % Daniel.Stolzberg@gmail.com
 
+% Copyright (C) 2016  Daniel Stolzberg, PhD
+
 % not doing anything with CONFIG
 
 if RUNTIME.UseOpenEx
@@ -19,8 +21,8 @@ if RUNTIME.UseOpenEx
 else
     for i = 1:length(AX)
         AX(i).Halt;
+        delete(AX(i));
     end
-    delete(AX);
     h = findobj('Type','figure','-and','Name','RPfig');
     close(h);
 end

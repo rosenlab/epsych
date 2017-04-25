@@ -3,10 +3,11 @@ function ep_SaveDataFcn(RUNTIME)
 % 
 % Default function fo saving behavioral data
 % 
-% Use ep_PsychConfig GUI to specify custom function.
+% Use ep_RunExpt GUI to specify custom function.
 % 
 % Daniel.Stolzberg@gmail.com 2014
 
+% Copyright (C) 2016  Daniel Stolzberg, PhD
 
 for i = 1:RUNTIME.NSubjects
     
@@ -19,7 +20,7 @@ for i = 1:RUNTIME.NSubjects
         sprintf('Save ''%s (%d)'' Data',RUNTIME.TRIALS(i).Subject.Name,RUNTIME.TRIALS(i).Subject.BoxID));
     
     if fn == 0
-        fprintf(2,'NOT SAVING DATA FOR SUBJECT ''%s'' IN BOX ID %d\n', ...
+        vprintf(0,1,'NOT SAVING DATA FOR SUBJECT ''%s'' IN BOX ID %d\n', ...
             RUNTIME.TRIALS(i).Subject.Name,RUNTIME.TRIALS(i).Subject.BoxID);
         continue
     end

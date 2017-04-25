@@ -4,29 +4,20 @@ function ep_SaveDataFcn_SanesLab(RUNTIME)
 % Sanes Lab function for saving behavioral data
 %
 % 
-% Daniel.Stolzberg@gmail.com 2014. Updated by ML Caras 2015.
-global PUMPHANDLE
+% Daniel.Stolzberg@gmail.com 2014. 
+% Updated by ML Caras 2015.
+% Updated by KP 2016. Saves buffer files and associated ephys tank number.
 
 datestr = date;
 
 %For each subject...
 for i = 1:RUNTIME.NSubjects
     
-    %Get total water volume dispensed (ml)
-    fprintf(PUMPHANDLE,'DIS\n');
-    V = fscanf(PUMPHANDLE,'%s');
-    startind = regexp(V,'I')+1;
-    finalind = regexp(V,'W')-1;
-    V = V(startind:finalind);
-    ind = regexp(V,'[^I]');
-    vol = V(ind);
-    
+    %Subject ID
     ID = RUNTIME.TRIALS(i).Subject.Name;
-    
     
     %Let user decide where to save file
     h = msgbox(sprintf('Save Data for ''%s''',ID),'Save Behavioural Data','help','modal');
-    
     uiwait(h);
     
     %Default filename
@@ -41,22 +32,41 @@ for i = 1:RUNTIME.NSubjects
     fileloc = fullfile(pn,fn);
     
     
+    
     %Save all relevant information
     Data = RUNTIME.TRIALS(i).DATA;
     
-    Info.TDT.RPVdsCircuit = RUNTIME.TDT(i).RPfile{1};
-    Info.TDT.fs = Data(1).fs;
+    Info = RUNTIME.TRIALS(i).Subject;
+    Info.TDT = RUNTIME.TDT(i);
     Info.TrialSelectionFcn = RUNTIME.TRIALS(i).trialfunc;
     Info.Date = datestr;
     Info.StartTime = RUNTIME.StartTime;
-    Info = RUNTIME.TRIALS(i).Subject;
-    Info.Water = str2num(vol);
-    Info.Bits.Hit = 1;
-    Info.Bits.Miss = 2;
-    Info.Bits.CR = 3;
-    Info.Bits.FA = 4;
+    Info.Water = updatewater_SanesLab;
+    Info.Bits = getBits_SanesLab;
     
-    Data = rmfield(Data,'fs');
+    %Add fields to Info struct if experiment used stimuli from WAV/MAT files
+    if any(~cellfun(@isempty,strfind(fieldnames(Data),'_ID')))          %kp
+        stimdir = uigetdir('D:\stim\AMjitter','Select folder of stimuli');
+        
+        Dfns = fieldnames(Data);
+        rvFN = Dfns{(~cellfun(@isempty,strfind(Dfns,'_ID')))};
+        nsf = max([Data.(rvFN)]);
+        stimfns = cell(1,nsf);
+%         for isf=1:numel(dir(fullfile(stimdir,'*.mat')))
+        for isf=1:nsf
+            
+            stimfns{isf} = uigetfile(stimdir,sprintf('Select file number %i of %i',isf,nsf));
+            
+        end
+        Info.StimDirName   = stimdir;
+        Info.StimFilenames = stimfns;
+    end
+    
+    %Associate an Block number if ephys also
+    if RUNTIME.UseOpenEx
+        BLOCK = input('Please enter the ephys BLOCK number associated with this behavior file.\n','s');
+        Info.epBLOCK = ['Block-' BLOCK];
+    end
     
     %Fix Trial Numbers (corrects for multiple calls of trial selection
     %function during session)
@@ -66,6 +76,7 @@ for i = 1:RUNTIME.NSubjects
     
     
     save(fileloc,'Data','Info')
+    disp(['Data saved to ' fileloc])
     
 end
 

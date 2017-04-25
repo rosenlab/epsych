@@ -17,6 +17,8 @@ function [P,fail] = ep_CompileProtocol(P)
 % 
 % Daniel.Stolzberg@gmail.com 2014
 
+% Copyright (C) 2016  Daniel Stolzberg, PhD
+
 fldn = fieldnames(P.MODULES);
 
 % look for buffers and replace them into the table as parameters
@@ -133,7 +135,7 @@ for i = 1:length(fn)
             cvals = Calibrate(vals,C);
             v(end+1,:)  = {sprintf('~%s_Amp',v{idx(j),1}), ...
                 'Write', cb, cvals, 0, 0, '< NONE >'}; %#ok<AGROW>
-            v(end+1,:)  = {sprintf('~%s_Norm',v{idx(j),1}), ...
+            v(end+1,:)  = {sprintf('~%s_norm',v{idx(j),1}), ...
                 'Write', cb, repmat(C.hdr.cfg.ref.norm,1,length(cvals)), ...
                 0, 0, '< NONE >'}; %#ok<AGROW>
             
@@ -143,25 +145,29 @@ for i = 1:length(fn)
     end
     
     % buffers
-    idx = find([v{:,6}]);
-    for j = 1:length(idx)
-        buflengths = zeros(size(v{idx(j),4}));
-        for b = 1:length(v{idx(j),4})
-            buflengths(b) = v{idx(j),4}{b}.nsamps;
+    bufparams = { v{([v{:,6}]==1),1} };               %kp
+    for j = 1:length(bufparams)
+        idx = find(strcmpi(bufparams{j},{v{:,1}}));   %kp
+        buflengths = zeros(size(v{idx,4}));
+        for b = 1:length(v{idx,4})
+            buflengths(b) = v{idx,4}{b}.nsamps;
             if strcmp(P.OPTIONS.IncludeWAVBuffers,'off')
-                v{idx(j),4}{b} = rmfield(v{idx(j),4}{b},'buffer');
+                v{idx,4}{b} = rmfield(v{idx,4}{b},'buffer');
             end
         end
-        if isempty(v{idx(j),3}) || strcmp(v{idx(j),3},'< NONE >')
+        if isempty(v{idx,3}) || strcmp(v{idx,3},'< NONE >')
             bb = sprintf('BufBuddy%d',m);
         else
-            bb = v{idx(j),3};
+            bb = v{idx,3};
         end
-        v{i,3} = bb;
-        v(end+1,:) = {sprintf('~%s_Size',v{idx(j),1}), ...
+        
+        v{idx,3} = bb;
+        v(end+1,:) = {sprintf('~%s_Size',v{idx,1}), ...
             'Write', bb, buflengths, 0, 0, '< NONE >'}; %#ok<AGROW>
-        v(end+1,:) = {sprintf('~%s_ID',v{idx(j),1}), ...
+        v(end+1,:) = {sprintf('~%s_ID',v{idx,1}), ...
             'Read/Write', bb, 1:length(buflengths), 0, 0, '< NONE >'}; %#ok<AGROW>
+        v(end+1,:) = v(idx,:); %#ok<AGROW> Place buffer tag last so that the buffer size is updated first (DJS 5/2016)
+        v(idx,:) = []; % delete original buffer tag
     end
     
     

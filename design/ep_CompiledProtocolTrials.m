@@ -11,6 +11,8 @@ function varargout = ep_CompiledProtocolTrials(protocol,varargin)
 %
 % Daniel.Stolzberg@gmail.com 2014
 
+% Copyright (C) 2016  Daniel Stolzberg, PhD
+
 argin.showgui = true;
 argin.trunc   = 0;
 
@@ -22,7 +24,7 @@ end
 
 [protocol,fail] = ep_CompileProtocol(protocol);
 if fail
-    fprintf(2,'Unable to properly compile protocol.\nCheck all ''buddy'' variables are balanced.\n') %#ok<PRTCAL>
+    vprintf(0,1,'Unable to properly compile protocol.\nCheck all ''buddy'' variables are balanced.\n')
     varargout{1} = [];
     varargout{2} = fail;
     return

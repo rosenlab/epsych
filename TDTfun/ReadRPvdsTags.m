@@ -17,7 +17,21 @@ end
 if isempty(fh), fh = figure('Visible','off','Name','ReadRPvdsfig'); end
 
 RP = actxcontrol('RPco.x','parent',fh);
-RP.ReadCOF(RPfile);
+r = RP.ReadCOF(RPfile);
+
+%For unknown reasons, sometimes the active X control fails to read the
+%parameter tags during the first attempt. Only happens when using OpenEx
+%and reading in a physiology RPVds circuit from an RZ5.
+if ~r
+    for k = 1:10
+        disp ('Unable to read parameter tags from RPVds file. Trying again...')
+        r = RP.ReadCOF(RPfile);
+        if r, break; end
+    end
+    if ~r
+        error('Unable to read parameter tags from  RPVds file.');
+    end
+end
 
 k = 1;
 n = RP.GetNumOf('ParTag');
